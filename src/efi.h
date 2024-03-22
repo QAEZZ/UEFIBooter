@@ -614,6 +614,13 @@ EFI_STATUS
     IN CHAR16 *WatchdogData OPTIONAL
 );
 
+// EFI_STALL; UEFI Spec 2.10 Sect. 7.5.2
+typedef
+EFI_STATUS
+(EFIAPI *EFI_STALL) (
+   IN UINTN                Microseconds
+);
+
 // EFI_WAIT_FOR_EVENT: UEFI Spec 2.10 section 7.1.5
 typedef 
 EFI_STATUS
@@ -1136,7 +1143,7 @@ typedef struct {
     // Miscellaneous Services
     //
     void*                  GetNextMonotonicCount;
-    void*                  Stall;
+    EFI_STALL                  Stall;
     EFI_SET_WATCHDOG_TIMER SetWatchdogTimer;
 
     //

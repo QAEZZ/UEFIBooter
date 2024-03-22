@@ -87,6 +87,39 @@ EFI_STATUS stats_for_nerds()
   }
 }
 
+VOID *memset(VOID *dst, UINT8 c, UINTN len)
+{
+  UINT8 *p = dst;
+  for (UINTN i = 0; i < len; i++)
+  {
+    p[i] = c;
+  }
+  return dst;
+}
+
+VOID *memcpy(VOID *dst, VOID *src, UINT8 c, UINTN len)
+{
+  UINT8 *p = dst;
+  UINT8 *q = src;
+  for (UINTN i = 0; i < len; i++)
+  {
+    p[i] = q[i];
+  }
+  return dst;
+}
+
+INTN *memcmp(VOID *m1, VOID *m2, UINTN len)
+{
+  UINT8 *p = m1;
+  UINT8 *q = m2;
+  for (UINTN i = 0; i < len; i++)
+  {
+    if (p[i] != q[i])
+      return (INTN)p[i] - (INTN)q[i];
+  }
+  return 0;
+}
+
 CHAR16 *strcpy_u16(CHAR16 *dst, CHAR16 *src)
 {
   if (!dst)
@@ -102,10 +135,13 @@ CHAR16 *strcpy_u16(CHAR16 *dst, CHAR16 *src)
   return dst;
 }
 
-INTN strncmp_u16(CHAR16 *s1, CHAR16 *s2, UINTN len) {
-  if (len == 0) return 0;
+INTN strncmp_u16(CHAR16 *s1, CHAR16 *s2, UINTN len)
+{
+  if (len == 0)
+    return 0;
 
-  while (len > 0 && *s1 && *s2 && *s1 == *s2) {
+  while (len > 0 && *s1 && *s2 && *s1 == *s2)
+  {
     s1++;
     s2++;
     len--;
@@ -114,27 +150,54 @@ INTN strncmp_u16(CHAR16 *s1, CHAR16 *s2, UINTN len) {
   return *s1 - *s2;
 }
 
-CHAR16 *strrchr_u16(CHAR16 *str, CHAR16 c) {
+CHAR16 *strrchr_u16(CHAR16 *str, CHAR16 c)
+{
   CHAR16 *result = NULL;
-  
-  while (*str) {
-    if (*str == c) result = str;
+
+  while (*str)
+  {
+    if (*str == c)
+      result = str;
     str++;
   }
 
   return result;
 }
 
-CHAR16 *strcat_u16(CHAR16 *dst, CHAR16 *src) {
+CHAR16 *strcat_u16(CHAR16 *dst, CHAR16 *src)
+{
   CHAR16 *s = dst;
 
-  while(*s) s++;
-  
-  while(*src) *s++ = *src++;
+  while (*s)
+    s++;
+
+  while (*src)
+    *s++ = *src++;
 
   *s = u'\0';
   return dst;
+}
 
+UINTN strlen(CHAR16 *s)
+{
+  UINTN len = 0;
+  while (*s != '\0')
+  {
+    len++;
+    s++;
+  }
+  return len;
+}
+
+void fill_remaining_with_char(UINTN start_col, CHAR16 fill_char, UINTN max_cols)
+{
+  ConOut->SetCursorPosition(ConOut, start_col, con_get_mode_info(ConOut).CursorRow);
+
+  for (UINTN i = start_col; i < max_cols; i++)
+  {
+    CHAR16 buffer[2] = {fill_char, u'\0'};
+    con_output_string(ConOut, buffer);
+  }
 }
 
 EFI_STATUS read_esp_files(void)
@@ -155,7 +218,7 @@ EFI_STATUS read_esp_files(void)
 
   if (EFI_ERROR(status))
   {
-    con_output_stringf(ConErr,
+    con_output_stringf(ConOut,
                        u"ERROR: %x\r\nCould not open Loaded Image Protocol.\r\n",
                        status);
     return status;
@@ -172,8 +235,8 @@ EFI_STATUS read_esp_files(void)
 
   if (EFI_ERROR(status))
   {
-    con_output_string(ConErr,
-                      u"ERROR: %x\r\nCould not open Simple File System Protocol.\r\n");
+    con_output_stringf(ConOut,
+                       u"ERROR: %x\r\nCould not open Simple File System Protocol.\r\n");
     return status;
   }
 
@@ -181,12 +244,10 @@ EFI_STATUS read_esp_files(void)
   status = sfsp->OpenVolume(sfsp, &dirp);
   if (EFI_ERROR(status))
   {
-    con_output_string(ConErr,
-                      u"ERROR: %x\r\nCould not open Volume for the root dir.\r\n");
+    con_output_stringf(ConOut,
+                       u"ERROR: %x\r\nCould not open Volume for the root dir.\r\n");
     return status;
   }
-
-  // ==== TEMP ====
 
   CHAR16 current_directory[256];
   strcpy_u16(current_directory, u"/");
@@ -220,8 +281,11 @@ EFI_STATUS read_esp_files(void)
       dirp->Read(dirp, &buf_size, &file_info);
     }
 
+    con_output_stringf(ConOut, u"Half: %d\r\n", con_get_query_dimensions(ConOut).cols / 2);
     ConOut->SetCursorPosition(ConOut, 0, con_get_query_dimensions(ConOut).rows - 1);
     con_output_string(ConOut, u"Esc -> Go back\r");
+    // ConOut->SetCursorPosition(ConOut, con_get_query_dimensions(ConOut).cols - sizeof(), 0);
+    ConOut->SetCursorPosition(ConOut, 0, num_entries + 2);
 
     EFI_INPUT_KEY key = con_get_key(ConIn, BootServices);
     switch (key.ScanCode)
@@ -249,36 +313,47 @@ EFI_STATUS read_esp_files(void)
           i++;
         } while (i < csr_row);
 
-        if (file_info.Attribute & EFI_FILE_DIRECTORY) {
-          
+        if (file_info.Attribute & EFI_FILE_DIRECTORY)
+        {
+
           EFI_FILE_PROTOCOL *new_dir;
-          status = dirp->Open(dirp, 
+          status = dirp->Open(dirp,
                               &new_dir,
                               file_info.FileName,
                               EFI_FILE_MODE_READ,
                               0);
 
-          if (EFI_ERROR(status)) {
+          if (EFI_ERROR(status))
+          {
             con_output_stringf(ConOut,
                                u"ERROR: %x\r\nCould not open new directory %s\r\n",
                                status,
                                file_info.FileName);
+            goto cleanup;
           }
 
           dirp->Close(dirp);
           dirp = new_dir;
           csr_row = 1;
 
-          if (!strncmp_u16(file_info.FileName, u".", 2)) {
+          if (!strncmp_u16(file_info.FileName, u".", 2))
+          {
             // Do nothing
-          } else if (!strncmp_u16(file_info.FileName, u"..", 3)) {
-            
+          }
+          else if (!strncmp_u16(file_info.FileName, u"..", 3))
+          {
+
             CHAR16 *pos = strrchr_u16(current_directory, u'/');
-            // if (pos == current_directory) pos++;
-            pos++;
+
+            if (pos == current_directory)
+              pos++;
+            // pos++;
             *pos = u'\0';
-          } else {
-            if (current_directory[1] != u'\0') {
+          }
+          else
+          {
+            if (current_directory[1] != u'\0')
+            {
               strcat_u16(current_directory, u"/");
             }
             strcat_u16(current_directory, file_info.FileName);
@@ -286,15 +361,95 @@ EFI_STATUS read_esp_files(void)
           continue;
         }
 
-        csr_row = 1;
+        VOID *file_buffer = NULL;
+        buf_size = file_info.FileSize;
+        BootServices->AllocatePool(EfiLoaderData, buf_size, &file_buffer);
+        status = dirp->Read(dirp, &buf_size, file_buffer);
+
+        if (EFI_ERROR(status))
+        {
+          con_output_stringf(ConOut,
+                             u"ERROR: %x\r\nCould not allocate memory for file %s\r\n",
+                             status,
+                             file_info.FileName);
+          con_output_string(ConOut, u"\r\nPress any key to return...\r\n");
+          con_get_key(ConIn, BootServices);
+          goto cleanup;
+        }
+
+        EFI_FILE_PROTOCOL *file = NULL;
+        status = dirp->Open(dirp,
+                            &file,
+                            file_info.FileName,
+                            EFI_FILE_MODE_READ,
+                            0);
+        if (EFI_ERROR(status))
+        {
+          con_output_stringf(ConOut,
+                             u"ERROR: %x\r\nCould not open file %s\r\n",
+                             status,
+                             file_info.FileName);
+          con_output_string(ConOut, u"\r\nPress any key to return...\r\n");
+          con_get_key(ConIn, BootServices);
+          goto cleanup;
+        }
+
+        buf_size = file_info.FileSize;
+        status = dirp->Read(file, &buf_size, file_buffer);
+        if (EFI_ERROR(status))
+        {
+          con_output_stringf(ConOut,
+                             u"ERROR: %x\r\nCould not read file %s into buffer\r\n",
+                             status,
+                             file_info.FileName);
+          con_output_string(ConOut, u"\r\nPress any key to return...\r\n");
+          con_get_key(ConIn, BootServices);
+          goto cleanup;
+        }
+
+        if (buf_size != file_info.FileSize)
+        {
+          con_output_stringf(ConOut,
+                             u"ERROR: Could not read all of file %s into buffer\r\n\r\n"
+                             u"Bytes read: %d\r\n"
+                             u"Expceted..: %d\r\n",
+                             file_info.FileName,
+                             buf_size,
+                             file_info.FileSize);
+          con_output_string(ConOut, u"\r\nPress any key to return...\r\n");
+          con_get_key(ConIn, BootServices);
+          goto cleanup;
+        }
+
+        char *pos = (char *)file_buffer;
+        // ConOut->SetCursorPosition(ConOut, con_get_query_dimensions(ConOut).cols - sizeof(*pos), 0);
+
+        // status = ConOut->SetCursorPosition(ConOut, 5, 0);
+        ConOut->SetCursorPosition(ConOut, con_get_query_dimensions(ConOut).cols / 2, 0);
+        con_output_stringf(ConOut, u"Cursor col: %d\r\n", con_get_mode_info(ConOut).CursorColumn);
+
+        ConOut->SetCursorPosition(ConOut, con_get_query_dimensions(ConOut).cols / 2, 1);
+        con_output_string(ConOut, u"File Contents:\r\n");
+
+        ConOut->SetCursorPosition(ConOut, con_get_query_dimensions(ConOut).cols / 2, 2);
+
+        for (UINTN character = buf_size; character > 0; character--)
+        {
+          CHAR16 str[2] = {*pos, u'\0'};
+          con_output_string(ConOut, str);
+          pos++;
+        }
+
+        con_get_key(ConIn, BootServices);
+
+        BootServices->FreePool(file_buffer);
+        dirp->Close(file);
       }
       break;
     }
   }
 
-  // == END TEMP ==
-
-  con_output_string(ConOut, u"\r\nPress any key to go back...\r\n");
+  con_output_string(ConOut, u"\r\nPress any key to return...\r\n");
   con_get_key(ConIn, BootServices);
 
 cleanup:
@@ -313,6 +468,269 @@ cleanup:
   return status;
 }
 
+EFI_STATUS print_block_io_partitions(void)
+{
+  EFI_STATUS status = EFI_SUCCESS;
+  con_set_color(ConOut, DEFAULT_FG_COLOR, DEFAULT_BG_COLOR);
+  con_clear_screen(ConOut);
+
+  EFI_GUID bio_guid = EFI_BLOCK_IO_PROTOCOL_GUID;
+  EFI_BLOCK_IO_PROTOCOL *biop;
+  UINTN num_handles = 0;
+  EFI_HANDLE *handle_buffer = NULL;
+
+  EFI_GUID lip_guid = EFI_LOADED_IMAGE_PROTOCOL_GUID;
+  EFI_LOADED_IMAGE_PROTOCOL *lip = NULL;
+  status = BootServices->OpenProtocol(image,
+                                      &lip_guid,
+                                      (VOID **)&lip,
+                                      image,
+                                      NULL,
+                                      EFI_OPEN_PROTOCOL_BY_HANDLE_PROTOCOL);
+  if (EFI_ERROR(status))
+  {
+    con_output_stringf(ConOut,
+                       u"ERROR: %x\r\nCould not open Loaded Image Protocol.\r\n",
+                       status);
+    con_get_key(ConIn, BootServices);
+  }
+
+  status = BootServices->OpenProtocol(lip->DeviceHandle,
+                                      &bio_guid,
+                                      (VOID **)&biop,
+                                      image,
+                                      NULL,
+                                      EFI_OPEN_PROTOCOL_BY_HANDLE_PROTOCOL);
+  if (EFI_ERROR(status))
+  {
+    con_output_stringf(ConOut,
+                       u"ERROR: %x\r\nCould not open Block IO protocol for this loaded image.\r\n",
+                       status);
+    con_get_key(ConIn, BootServices);
+  }
+
+  UINT32 this_image_media_id = biop->Media->MediaId; // test if can be const
+
+  BootServices->CloseProtocol(lip->DeviceHandle,
+                              &bio_guid,
+                              image,
+                              NULL);
+  BootServices->CloseProtocol(image,
+                              &lip_guid,
+                              image,
+                              NULL);
+
+  status = BootServices->LocateHandleBuffer(ByProtocol,
+                                            &bio_guid,
+                                            NULL,
+                                            &num_handles,
+                                            &handle_buffer);
+  if (EFI_ERROR(status))
+  {
+    con_output_stringf(ConOut,
+                       u"ERROR: %x\r\nCould not locate Block IO Protocols.\r\n",
+                       status);
+    con_get_key(ConIn, BootServices);
+  }
+
+  UINT32 last_media_id = -1;
+  for (UINTN i = 0; i < num_handles; i++)
+  {
+    status = BootServices->OpenProtocol(handle_buffer[i],
+                                        &bio_guid,
+                                        (VOID **)&biop,
+                                        image,
+                                        NULL,
+                                        EFI_OPEN_PROTOCOL_BY_HANDLE_PROTOCOL);
+    if (EFI_ERROR(status))
+    {
+      con_output_stringf(ConOut,
+                         u"ERROR: %x\r\nCould not open Block IO Protocol on handle %u\r\n",
+                         status, i);
+      con_get_key(ConIn, BootServices);
+    }
+
+    if (last_media_id != biop->Media->MediaId)
+    {
+      last_media_id = biop->Media->MediaId;
+      con_output_string_colored_latter(ConOut,
+                                       u"Media ID: ",
+                                       (last_media_id == this_image_media_id ? u"(Disk Image)\r\n" : last_media_id + u"\r\n"),
+                                       EFI_LIGHTGRAY,
+                                       DEFAULT_BG_COLOR);
+    }
+
+    // con_output_string_colored_latter(ConOut,
+    //                                  u"Removable: ",
+    //                                  biop->Media->RemovableMedia ? u"Yes" : u"No",
+    //                                  EFI_LIGHTGRAY,
+    //                                  DEFAULT_BG_COLOR);
+    // con_output_string(ConOut, u" | ");
+
+    // con_output_string_colored_latter(ConOut,
+    //                                  u"MediaPresent: ",
+    //                                  biop->Media->MediaPresent ? u"Yes" : u"No",
+    //                                  EFI_LIGHTGRAY,
+    //                                  DEFAULT_BG_COLOR);
+    // con_output_string(ConOut, u" | ");
+
+    // con_output_string_colored_latter(ConOut,
+    //                                  u"LglPart: ",
+    //                                  biop->Media->LogicalPartition ? u"Yes" : u"No",
+    //                                  EFI_LIGHTGRAY,
+    //                                  DEFAULT_BG_COLOR);
+    // con_output_string(ConOut, u" | ");
+
+    // con_output_string_colored_latter(ConOut,
+    //                                  u"RdOnly: ",
+    //                                  biop->Media->ReadOnly ? u"Yes" : u"No",
+    //                                  EFI_LIGHTGRAY,
+    //                                  DEFAULT_BG_COLOR);
+    // con_output_string(ConOut, u" | ");
+
+    // con_output_string_colored_latter(ConOut,
+    //                                  u"WrtCaching: ",
+    //                                  biop->Media->WriteCaching ? u"Yes" : u"No",
+    //                                  EFI_LIGHTGRAY,
+    //                                  DEFAULT_BG_COLOR);
+    // con_output_string(ConOut, u" | \r\n");
+
+    // // -- Numerical Data ---------------------------------------------------------
+
+    // con_output_uint32_colored_latter(ConOut,
+    //                                  u"BlkSz: ",
+    //                                  biop->Media->BlockSize,
+    //                                  EFI_LIGHTGRAY,
+    //                                  DEFAULT_BG_COLOR);
+    // con_output_string(ConOut, u" | ");
+
+    // con_output_uint32_colored_latter(ConOut,
+    //                                  u"IoAlign: ",
+    //                                  biop->Media->IoAlign,
+    //                                  EFI_LIGHTGRAY,
+    //                                  DEFAULT_BG_COLOR);
+    // con_output_string(ConOut, u" | ");
+
+    // con_output_efi_lba_colored_latter(ConOut,
+    //                                  u"LstBlk: ",
+    //                                  biop->Media->LastBlock,
+    //                                  EFI_LIGHTGRAY,
+    //                                  DEFAULT_BG_COLOR);
+    // con_output_string(ConOut, u" | ");
+
+    // con_output_efi_lba_colored_latter(ConOut,
+    //                                  u"LwLBA: ",
+    //                                  biop->Media->LowestAlignedLba,
+    //                                  EFI_LIGHTGRAY,
+    //                                  DEFAULT_BG_COLOR);
+    // con_output_string(ConOut, u" | ");
+
+    // con_output_uint32_colored_latter(ConOut,
+    //                                  u"LglBlkPerPhysBlk: ",
+    //                                  biop->Media->LogicalBlocksPerPhysicalBlock,
+    //                                  EFI_LIGHTGRAY,
+    //                                  DEFAULT_BG_COLOR);
+    // con_output_string(ConOut, u" | \r\n");
+
+    // con_output_uint32_colored_latter(ConOut,
+    //                                  u"OptmlTrnsfrLenGran: ",
+    //                                  biop->Media->OptimalTransferLengthGranularity,
+    //                                  EFI_LIGHTGRAY,
+    //                                  DEFAULT_BG_COLOR);
+    // con_output_string(ConOut, u" | \r\n");
+
+    if (biop->Media->LastBlock == 0)
+    {
+      BootServices->CloseProtocol(handle_buffer[i],
+                                  &bio_guid,
+                                  image,
+                                  NULL);
+      continue;
+    }
+
+    con_output_stringf(ConOut,
+                       u"Removable: %s | MediaPresent: %s | LglPart: %s | RdOnly: %s | WrtCaching: %s\r\n"
+                       u"BlkSz: %u | IoAlign: %u | LstBlk: %u | LwLBA: %u | LglBlkPerPhysBlk: %u\r\n"
+                       u"OptmlTrnsfrLenGran: %u\r\n",
+                       biop->Media->RemovableMedia ? u"Yes" : u"No",
+                       biop->Media->MediaPresent ? u"Yes" : u"No",
+                       biop->Media->LogicalPartition ? u"Yes" : u"No",
+                       biop->Media->ReadOnly ? u"Yes" : u"No",
+                       biop->Media->WriteCaching ? u"Yes" : u"No",
+
+                       biop->Media->BlockSize,
+                       biop->Media->IoAlign,
+                       biop->Media->LastBlock,
+                       biop->Media->LowestAlignedLba,
+                       biop->Media->LogicalBlocksPerPhysicalBlock,
+                       biop->Media->OptimalTransferLengthGranularity);
+
+    if (!biop->Media->LogicalPartition)
+    {
+      con_output_string(ConOut, u"--<Entire Disk>\r");
+      fill_remaining_with_char(strlen(u"--<Entire Disk>"), u'-', con_get_query_dimensions(ConOut).cols);
+      con_output_string(ConOut, u"\r\n");
+    }
+    else
+    {
+      EFI_GUID pi_guid = EFI_PARTITION_INFO_PROTOCOL_GUID;
+      EFI_PARTITION_INFO_PROTOCOL *pip = NULL;
+      status = BootServices->OpenProtocol(handle_buffer[i],
+                                          &pi_guid,
+                                          (VOID **)&pip,
+                                          image,
+                                          NULL,
+                                          EFI_OPEN_PROTOCOL_BY_HANDLE_PROTOCOL);
+      if (EFI_ERROR(status))
+      {
+        con_output_stringf(ConOut,
+                           u"ERROR: %x\r\nCould not open Partition Info Protocol on handle %u\r\n",
+                           status, i);
+        con_get_key(ConIn, BootServices);
+      }
+      else
+      {
+        if (pip->Type == PARTITION_TYPE_MBR)
+          con_output_string(ConOut, u"<MBR>\r\n");
+        else if (pip->Type == PARTITION_TYPE_OTHER)
+          con_output_string(ConOut, u"<OTHER>\r\n");
+        else if (pip->Type == PARTITION_TYPE_GPT)
+        {
+          if (pip->System == 1)
+          {
+            con_output_string(ConOut, u"--<EFI Sys Partition>\r");
+            fill_remaining_with_char(strlen(u"--<EFI Sys Partition>"), u'-', con_get_query_dimensions(ConOut).cols);
+            con_output_string(ConOut, u"\r\n");
+          }
+          else
+          {
+            EFI_GUID bd_guid = BASIC_DATA_GUID;
+            if (!memcmp(&pip->Info.Gpt.PartitionTypeGUID, &bd_guid, sizeof(EFI_GUID)))
+            {
+              con_output_string(ConOut,
+                                u"--<Basic Data>\r");
+
+              fill_remaining_with_char(strlen(u"--<Basic Data>"), u'-', con_get_query_dimensions(ConOut).cols);
+              con_output_string(ConOut, u"\r\n");
+            }
+            else
+            {
+              con_output_string(ConOut, u"--<Other GPT Type>\r");
+              fill_remaining_with_char(strlen(u"--<Other GPT Type>"), u'-', con_get_query_dimensions(ConOut).cols);
+              con_output_string(ConOut, u"\r\n");
+            }
+          }
+        }
+      }
+    }
+    con_output_string(ConOut, u"\r\n");
+  }
+
+  con_output_string(ConOut, u"Press any key to return...\r\n");
+  con_get_key(ConIn, BootServices);
+  return status;
+}
+
 EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable)
 {
 
@@ -322,20 +740,25 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable)
 
   con_set_color(ConOut, DEFAULT_FG_COLOR, DEFAULT_BG_COLOR);
 
+  ConOut->SetMode(ConOut, 2);
+  // ConOut->QueryMode(ConOut, 3, )
+
+  const CHAR16 *menu_choices[] = {
+      u"Stats For Nerds",
+      u"Set Graphics Mode",
+      u"Read ESP Files",
+      u"Print BLOCK IO Partitions"};
+
+  const EFI_STATUS (*menu_funcs[])(void) = {
+      stats_for_nerds,
+      system_shutdown,
+      read_esp_files,
+      print_block_io_partitions};
+
   // Screen loop
   bool running = true;
   while (running)
   {
-    const CHAR16 *menu_choices[] = {
-        u"Stats For Nerds",
-        u"Set Graphics Mode",
-        u"Read ESP Files"};
-
-    const EFI_STATUS (*menu_funcs[])(void) = {
-        stats_for_nerds,
-        system_shutdown,
-        read_esp_files};
-
     con_clear_screen(ConOut);
 
     ConDimensions dimensions = con_get_query_dimensions_with_mode(ConOut, ConOut->Mode->Mode);
@@ -403,7 +826,7 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable)
           EFI_STATUS return_status = menu_funcs[current_row]();
           if (EFI_ERROR(return_status))
           {
-            con_output_stringf(ConErr, u"ERROR: %x\r\n\r\nPress any key to go back...\r\n", return_status);
+            con_output_stringf(ConOut, u"ERROR: %x\r\n\r\nPress any key to go back...\r\n", return_status);
             con_get_key(ConOut, BootServices);
           }
           getting_input = false;

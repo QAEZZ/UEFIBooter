@@ -50,6 +50,43 @@ EFI_STATUS con_output_string(EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL *ConOut, CHAR16 *me
   return ConOut->OutputString(ConOut, message);
 }
 
+BOOLEAN con_output_uint32(EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL *ConOut, UINT32 number) {
+  const CHAR16 *digits = u"0123456789ABCDEF";
+  CHAR16 buffer[24];
+  UINTN i = 0;
+  BOOLEAN negative = FALSE;
+
+  if ((INTN)number < 0) {
+    number = -(INTN)number;
+    negative = TRUE;
+  }
+
+  do
+  {
+    buffer[i++] = digits[number % 10];
+    number /= 10;
+  } while (number > 0);
+
+  if (negative) {
+    buffer[i++] = u'-';
+  }
+
+  // 123 -> buffer = 321
+  buffer[i--] = u'\0'; // NULL terminate the string
+
+  // reverse digits in buffer
+  for (UINTN j = 0; j < i; j++, i--)
+  {
+    UINTN temp = buffer[i];
+    buffer[i] = buffer[j];
+    buffer[j] = temp;
+  }
+
+  con_output_string(ConOut, buffer);
+
+  return TRUE;
+}
+
 // con_output_hex adapted from Queso Fuego's "UEFI Dev (in C)" Episode 9.
 bool con_output_hex(EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL *ConOut, UINTN number)
 {
@@ -159,6 +196,13 @@ bool con_output_stringf(EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL *ConOut, CHAR16 *format,
       }
       break;
 
+      case u'u': // print UINT32
+      {
+        UINT32 number = va_arg(args, UINT32);
+        con_output_uint32(ConOut, number);
+      }
+      break;
+
       default:
         con_output_string(ConOut, u"Invalid format specifier: %");
         charstr[0] = format[i];
@@ -208,6 +252,67 @@ EFI_STATUS con_set_color(EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL *ConOut, UINTN fg, UINT
   }
   return ConOut->SetAttribute(ConOut, EFI_TEXT_ATTR(fg, bg));
 }
+
+EFI_STATUS con_output_string_colored_latter(EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL *ConOut, CHAR16 *prefix, CHAR16 *colored_message, UINTN fg, UINTN bg) {
+  if (ConOut == NULL || prefix == NULL || colored_message == NULL) {
+    return EFI_INVALID_PARAMETER;
+  }
+
+  con_output_string(ConOut, prefix);
+  con_set_color(ConOut, fg, bg);
+  con_output_string(ConOut, colored_message);
+
+  con_set_color(ConOut, DEFAULT_FG_COLOR, DEFAULT_BG_COLOR);
+
+  return EFI_SUCCESS;
+}
+
+EFI_STATUS con_output_uint32_colored_latter(EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL *ConOut, CHAR16 *prefix, UINT32 *colored_number, UINTN fg, UINTN bg) {
+  if (ConOut == NULL || prefix == NULL || colored_number == NULL) {
+    return EFI_INVALID_PARAMETER;
+  }
+
+  con_output_string(ConOut, prefix);
+  con_set_color(ConOut, fg, bg);
+  con_output_uint32(ConOut, &colored_number);
+
+  con_set_color(ConOut, DEFAULT_FG_COLOR, DEFAULT_BG_COLOR);
+
+  return EFI_SUCCESS;
+}
+
+EFI_STATUS con_output_efi_lba_colored_latter(EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL *ConOut, CHAR16 *prefix, EFI_LBA *colored_number, UINTN fg, UINTN bg) {
+  if (ConOut == NULL || prefix == NULL || colored_number == NULL) {
+    return EFI_INVALID_PARAMETER;
+  }
+
+  con_output_string(ConOut, prefix);
+  con_set_color(ConOut, fg, bg);
+  con_output_uint32(ConOut, &colored_number);
+
+  con_set_color(ConOut, DEFAULT_FG_COLOR, DEFAULT_BG_COLOR);
+
+  return EFI_SUCCESS;
+}
+
+EFI_STATUS con_output_stringf_colored_latter(EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL *ConOut, UINTN fg, UINTN bg, CHAR16 *prefix, CHAR16 *format, ...)
+{
+  if (ConOut == NULL || prefix == NULL || format == NULL)
+  {
+    return EFI_INVALID_PARAMETER;
+  }
+
+  va_list args;
+  va_start(args, format);
+
+  con_output_string(ConOut, prefix);
+  con_set_color(ConOut, fg, bg);
+  con_output_stringf(ConOut, format, args);
+  con_set_color(ConOut, DEFAULT_FG_COLOR, DEFAULT_BG_COLOR);
+
+  va_end(args);
+}
+
 
 // =============================================
 // Console Input
