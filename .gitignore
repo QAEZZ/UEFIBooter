@@ -1,0 +1,6 @@
+tools/
+src/.vscode/
+src/*.d
+src/*.EFI
+src/*.INF
+src/*.hdd
