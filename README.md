@@ -5,5 +5,5 @@ I do plan on making a bootloader/manager truly my own without following a series
 - qemu x86_64
 - edk2-ovmf
 - make
-- gcc
+- x86_64-w64-mingw32-gcc
 - `queso-fuego/UEFI-GPT-image-creator`
