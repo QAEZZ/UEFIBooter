@@ -1,1 +1,0 @@
-mkisofs -o ~/ISOs/ubuntu-22.04.4-uefibooter.iso /mnt/iso_mod 
