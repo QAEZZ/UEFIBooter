@@ -1152,6 +1152,8 @@ load_boot_selector(void)
   return status;
 }
 
+
+
 EFI_STATUS
 view_bootable_media(void)
 {
@@ -1159,11 +1161,39 @@ view_bootable_media(void)
 
   con_set_color(ConOut, DEFAULT_FG_COLOR, DEFAULT_BG_COLOR);
   con_clear_screen(ConOut);
+  
+  // for (UINTN i = 0; i < SystemTable->NumberOfTableEntries; i++) {
+  //   con_output_string(ConOut, u"Found.\r\n");
+  //   // con_output_string(ConOut, SystemTable->ConfigurationTable[i].VendorGuid.Node[0]);
+  // }
 
-  for (UINTN i = 0; i < SystemTable->NumberOfTableEntries; i++) {
-    con_output_string(ConOut, u"Found.\r\n");
-    // con_output_string(ConOut, SystemTable->ConfigurationTable[i].VendorGuid.Node[0]);
+  CHAR16 name[1024];
+  UINTN name_size = sizeof(name);
+  EFI_GUID VendorGuid;
+  status = RuntimeServices->GetNextVariableName(&name_size,
+                                                &name,
+                                                &VendorGuid);
+
+  // if (EFI_ERROR(status)) {
+  //   con_output_stringf(ConOut, u"ERROR: %x\r\nCouldn't get next variable name.", status);
+  //   con_get_key(ConIn, BootServices);
+  // }
+
+  con_output_string(ConOut, u"While Loop\r\n");
+  while (!EFI_ERROR(status)) {
+    if (strncmp_u16(name, L"Boot", 4) == 0 && strlen_u16(name) == 8) {
+      con_output_stringf(ConOut, u"Boot Variable: %s\r\n", name);
+    }
+
+    con_output_string(ConOut, u"Not strncmp, \r\n");
+    // con_output_stringf(ConOut, u"Name: %s\r\n", name);
+
+    name_size = sizeof(name);
+    status = RuntimeServices->GetNextVariableName(&name_size,
+                                                  &name,
+                                                  &VendorGuid);
   }
+
 
   con_output_string(ConOut, u"Press any key to return...");
   con_get_key(ConIn, BootServices);
