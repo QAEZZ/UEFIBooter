@@ -1185,7 +1185,7 @@ view_bootable_media(void)
       con_output_stringf(ConOut, u"Boot Variable: %s\r\n", name);
     }
 
-    con_output_string(ConOut, u"Not strncmp, \r\n");
+    con_output_string(ConOut, u"-\r");
     // con_output_stringf(ConOut, u"Name: %s\r\n", name);
 
     name_size = sizeof(name);
