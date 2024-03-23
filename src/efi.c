@@ -1223,18 +1223,18 @@ efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE* SystemTable)
 
   ConOut->SetMode(ConOut, 2);
 
-  const CHAR16* menu_choices[] = { u"Stats For Nerds",
+  const CHAR16* menu_choices[] = { u"View Bootable Media",
+                                   u"Stats For Nerds",
                                    u"Read ESP Files",
                                    u"Print BLOCK IO Partitions",
                                    u"Read File From Data Partition",
-                                   u"View Bootable Media",
                                    u"Shutdown" };
 
-  const EFI_STATUS (*menu_funcs[])(void) = { stats_for_nerds,
+  const EFI_STATUS (*menu_funcs[])(void) = { view_bootable_media,
+                                             stats_for_nerds,
                                              read_esp_files,
                                              print_block_io_partitions,
                                              load_boot_selector,
-                                             view_bootable_media,
                                              shutdown };
 
   // Screen loop
