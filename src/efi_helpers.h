@@ -21,9 +21,7 @@
 
 #include <stdarg.h>
 #include <stdint.h>
-// #include "efi.h"
-#include <efi.h>
-#include <efilib.h>
+#include "efi.h"
 
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof(x)[0])
 

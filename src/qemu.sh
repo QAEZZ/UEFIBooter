@@ -22,3 +22,5 @@ qemu-system-x86_64 \
 #-device scsi-hd,bus=scsi1.0,drive=drive-virtio-disk1,id=virtio-scsi-pci,physical_block_size=1024,logical_block_size=1024 \
 #-net none
 
+
+# genisoimage -o test.iso -b BOOTX64.EFI -no-emul-boot -m test.iso . 
