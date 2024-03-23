@@ -1152,50 +1152,72 @@ load_boot_selector(void)
   return status;
 }
 
-
-
 EFI_STATUS
 view_bootable_media(void)
 {
   EFI_STATUS status = EFI_SUCCESS;
+  EFI_STATUS var_status = EFI_SUCCESS;
 
   con_set_color(ConOut, DEFAULT_FG_COLOR, DEFAULT_BG_COLOR);
   con_clear_screen(ConOut);
-  
+
   // for (UINTN i = 0; i < SystemTable->NumberOfTableEntries; i++) {
   //   con_output_string(ConOut, u"Found.\r\n");
-  //   // con_output_string(ConOut, SystemTable->ConfigurationTable[i].VendorGuid.Node[0]);
+  //   // con_output_string(ConOut,
+  //   SystemTable->ConfigurationTable[i].VendorGuid.Node[0]);
   // }
 
   CHAR16 name[1024];
   UINTN name_size = sizeof(name);
   EFI_GUID VendorGuid;
-  status = RuntimeServices->GetNextVariableName(&name_size,
-                                                &name,
-                                                &VendorGuid);
+  status = RuntimeServices->GetNextVariableName(&name_size, &name, &VendorGuid);
 
   // if (EFI_ERROR(status)) {
-  //   con_output_stringf(ConOut, u"ERROR: %x\r\nCouldn't get next variable name.", status);
-  //   con_get_key(ConIn, BootServices);
+  //   con_output_stringf(ConOut, u"ERROR: %x\r\nCouldn't get next variable
+  //   name.", status); con_get_key(ConIn, BootServices);
   // }
 
   con_output_string(ConOut, u"While Loop\r\n");
   while (!EFI_ERROR(status)) {
-    if (strncmp_u16(name, L"Boot", 4) == 0 && strlen_u16(name) == 8) {
-      con_output_stringf(ConOut, u"Boot Variable: %s\r\n", name);
+    // if (strncmp_u16(name, L"Boot", 4) == 0 && strlen_u16(name) == 8) {
+    //   con_output_stringf(ConOut, u"Boot Variable: %s\r\n", name);
+    // }
+    if (strncmp_u16(name, u"BootOrder", 9) == 0) {
+      con_output_stringf(ConOut,
+                         u"\r\n\r\n%s\r\nNameSize: %d\r\n"
+                         u"VenderGuid TimeLow: %d\r\n"
+                         u"Node: %d\r\n",
+                        //  u"\r\n\r\n",
+                         name,
+                         name_size,
+                         VendorGuid.TimeLow,
+                         VendorGuid.Node);
+      for (UINTN i = 0; i < sizeof(VendorGuid.Node); i++) {
+        con_output_stringf(ConOut,
+                           u"Node[%d]: %d\r\n",
+                           i,
+                           VendorGuid.Node[i]);
+      }
+      con_output_string(ConOut, u"\r\n\r\n");
+
+      // for (UINTN i = 0; i < VendorGuid.Node)
+      // var_status = RuntimeServices->GetVariable(&name,
+      //                                           &VendorGuid,
+      //                                           0,
+      //                                           &name_size,
+      //                                           NULL);
     }
 
-    con_output_string(ConOut, u"-\r");
+    con_output_string(ConOut, u"-");
     // con_output_stringf(ConOut, u"Name: %s\r\n", name);
+    // con_output_stringf(ConOut, u"%s ", name);
 
     name_size = sizeof(name);
-    status = RuntimeServices->GetNextVariableName(&name_size,
-                                                  &name,
-                                                  &VendorGuid);
+    status =
+      RuntimeServices->GetNextVariableName(&name_size, &name, &VendorGuid);
   }
 
-
-  con_output_string(ConOut, u"Press any key to return...");
+  con_output_string(ConOut, u"\r\nPress any key to return...");
   con_get_key(ConIn, BootServices);
   return status;
 }
@@ -1230,12 +1252,9 @@ efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE* SystemTable)
                                    u"Read File From Data Partition",
                                    u"Shutdown" };
 
-  const EFI_STATUS (*menu_funcs[])(void) = { view_bootable_media,
-                                             stats_for_nerds,
-                                             read_esp_files,
-                                             print_block_io_partitions,
-                                             load_boot_selector,
-                                             shutdown };
+  const EFI_STATUS (*menu_funcs[])(
+    void) = { view_bootable_media,       stats_for_nerds,    read_esp_files,
+              print_block_io_partitions, load_boot_selector, shutdown };
 
   // Screen loop
   bool running = true;
