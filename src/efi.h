@@ -12,7 +12,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-#include <stddef.h> // NULL
+#include <stddef.h> // for NULL
 
 // UEFI Spec 2.10 section 2.4
 #define IN
@@ -90,6 +90,10 @@ typedef enum {
 } EFI_MEMORY_TYPE;
 
 // EFI_GUID values - various/misc./NOT all inclusive
+#define EFI_DEVICE_PATH_PROTOCOL_GUID \
+{0x09576e91,0x6d3f,0x11d2,\
+{0x8e,0x39,0x00,0xa0,0xc9,0x69,0x72,0x3b}}
+
 #define EFI_GRAPHICS_OUTPUT_PROTOCOL_GUID \
 {0x9042a9de,0x23dc,0x4a38,\
  0x96,0xfb,{0x7a,0xde,0xd0,0x80,0x51,0x6a}}
@@ -1207,6 +1211,31 @@ EFI_STATUS
     IN EFI_SYSTEM_TABLE *SystemTable
 );
 
+// EFI_DEVICE_PATH_PROTOCOL: UEFI Spec 2.10 Sect 10.2
+typedef struct EFI_DEVICE_PATH_PROTOCOL {
+    UINT8           Type;
+    UINT8           SubType;
+    UINT8           Length[2];
+} EFI_DEVICE_PATH_PROTOCOL;
+
+// EFI_LOAD_OPTIONS: UEFI Spec 2.10 Sect 3.1.3
+
+#define LOAD_OPTION_ACTIVE                0x00000001
+#define LOAD_OPTION_FORCE_RECONNECT       0x00000002
+#define LOAD_OPTION_HIDDEN                0x00000008
+#define LOAD_OPTION_CATEGORY              0x00001F00
+
+#define LOAD_OPTION_CATEGORY_BOOT         0x00000000
+#define LOAD_OPTION_CATEGORY_APP          0x00000100
+
+typedef struct _EFI_LOAD_OPTION {
+    UINT32                            Attributes;
+    UINT16                            FilePathListLength;
+    // CHAR16                         Description[];
+    // EFI_DEVICE_PATH_PROTOCOL       FilePathList[];
+    // UINT8                          OptionalData[];
+}   EFI_LOAD_OPTION;
+
 // EFI_LOADED_IMAGE_PROTOCOL: UEFI Spec 2.10 section 9.1.1
 #define EFI_LOADED_IMAGE_PROTOCOL_REVISION 0x1000
 
@@ -1217,8 +1246,7 @@ typedef struct {
 
     // Source location of the image
     EFI_HANDLE               DeviceHandle;
-    //EFI_DEVICE_PATH_PROTOCOL *FilePath;
-    void                     *FilePath;
+    EFI_DEVICE_PATH_PROTOCOL *FilePath;
     VOID                     *Reserved;
 
     // Image’s load options
@@ -1233,5 +1261,12 @@ typedef struct {
     //EFI_IMAGE_UNLOAD Unload;
     void            *Unload;
 } EFI_LOADED_IMAGE_PROTOCOL;
+
+// EFI_EXIT_BOOT_SERVICES: UEFI Spec 2.10 Sect 7.4.6
+EFI_STATUS
+(EFIAPI *EFI_EXIT_BOOT_SERVICES) (
+    IN EFI_HANDLE   ImageHandle,
+    IN UINTN        MapKey
+);
 
 #endif // EFI_H

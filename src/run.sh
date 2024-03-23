@@ -1,1 +1,1 @@
-make && ./write_gpt && ./qemu.sh
+make && ./write_gpt -ad ./test.txt ./secondtest.txt && ./qemu.sh

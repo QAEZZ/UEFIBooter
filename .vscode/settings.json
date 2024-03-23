@@ -3,6 +3,9 @@
         "array": "c",
         "string": "c",
         "string_view": "c",
-        "span": "c"
+        "span": "c",
+        "uefi-loadedimage.h": "c",
+        "uefi-devicepath.h": "c",
+        "efi.h": "c"
     }
 }
