@@ -1223,7 +1223,7 @@ efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE* SystemTable)
 
   ConOut->SetMode(ConOut, 2);
 
-  const CHAR16* menu_choices[] = { u"View Bootable Media",
+  const CHAR16* menu_choices[] = { u"View Bootable Media (WIP)",
                                    u"Stats For Nerds",
                                    u"Read ESP Files",
                                    u"Print BLOCK IO Partitions",
