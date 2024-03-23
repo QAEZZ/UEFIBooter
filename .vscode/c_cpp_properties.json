@@ -5,6 +5,7 @@
             "includePath": [
                 "${workspaceFolder}/**",
                 "/usr/include/efi",
+                "/usr/include/efi/protocol",
                 "/usr/include/efivar"
             ],
             "defines": [],

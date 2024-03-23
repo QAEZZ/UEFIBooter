@@ -9,8 +9,35 @@ gcc:
 		-ffreestanding \
 		-nostdlib \
 		-Wl,--subsystem,10 \
+		-I/usr/include/efi \
+		-I/usr/include/efi/x86_64 \
+		-I/usr/include/efi/protocol \
+		-I/usr/include/efi/protocol/secureboot \
+		-L/path/to/gnu-efi/libs \
+		-lgnuefi \
+		-lgnuefi \
 		-e efi_main \
 		-o BOOTX64.EFI
+
+gccnowarn:
+		gcc:
+		x86_64-w64-mingw32-gcc efi.c \
+		-std=c17 \
+		-mno-red-zone \
+		-MMD \
+		-ffreestanding \
+		-nostdlib \
+		-Wl,--subsystem,10 \
+		-I/usr/include/efi \
+		-I/usr/include/efi/x86_64 \
+		-I/usr/include/efi/protocol \
+		-I/usr/include/efi/protocol/secureboot \
+		-L/path/to/gnu-efi/libs \
+		-lgnuefi \
+		-lgnuefi \
+		-e efi_main \
+		-o BOOTX64.EFI
+
 
 # --subsystem,10 <- 10 is the code for EFI_APPLICATION
 

@@ -43,7 +43,7 @@
 //  with simple ways of using ConOut.
 // =============================================
 
-EFI_STATUS con_output_string(EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL *ConOut, CHAR16 *message)
+EFI_STATUS con_output_string(EFI_SIMPLE_TEXT_OUT_PROTOCOL *ConOut, CHAR16 *message)
 {
   if (ConOut == NULL || message == NULL)
   {
@@ -52,7 +52,7 @@ EFI_STATUS con_output_string(EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL *ConOut, CHAR16 *me
   return ConOut->OutputString(ConOut, message);
 }
 
-BOOLEAN con_output_uint32(EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL *ConOut, UINT32 number) {
+BOOLEAN con_output_uint32(EFI_SIMPLE_TEXT_OUT_PROTOCOL *ConOut, UINT32 number) {
   const CHAR16 *digits = u"0123456789ABCDEF";
   CHAR16 buffer[24];
   UINTN i = 0;
@@ -90,7 +90,7 @@ BOOLEAN con_output_uint32(EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL *ConOut, UINT32 number
 }
 
 // con_output_hex adapted from Queso Fuego's "UEFI Dev (in C)" Episode 9.
-bool con_output_hex(EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL *ConOut, UINTN number)
+BOOLEAN con_output_hex(EFI_SIMPLE_TEXT_OUT_PROTOCOL *ConOut, UINTN number)
 {
   const CHAR16 *digits = u"0123456789ABCDEF";
   CHAR16 buffer[20]; // enough for an UINTN_MAX, hopefully
@@ -118,16 +118,16 @@ bool con_output_hex(EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL *ConOut, UINTN number)
 
   con_output_string(ConOut, buffer);
 
-  return true;
+  return TRUE;
 }
 
 // con_output_int32 adapted from Queso Fuego's "UEFI Dev (in C)" Episode 9.
-bool con_output_int32(EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL *ConOut, INT32 number)
+BOOLEAN con_output_int32(EFI_SIMPLE_TEXT_OUT_PROTOCOL *ConOut, INT32 number)
 {
   const CHAR16 *digits = u"0123456789";
   CHAR16 buffer[11]; // enough for an INT32_MAX + sign character
   UINTN i = 0;
-  const bool negative = (number < 0);
+  const BOOLEAN negative = (number < 0);
 
   if (negative)
     number = -number;
@@ -156,13 +156,13 @@ bool con_output_int32(EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL *ConOut, INT32 number)
 
   con_output_string(ConOut, buffer);
 
-  return true;
+  return TRUE;
 }
 
 // con_output_stringf adapted from Queso Feugo's "UEFI Dev (in C)" Episode 9.
-bool con_output_stringf(EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL *ConOut, CHAR16 *format, ...)
+BOOLEAN con_output_stringf(EFI_SIMPLE_TEXT_OUT_PROTOCOL *ConOut, CHAR16 *format, ...)
 {
-  bool result = false;
+  BOOLEAN result = FALSE;
   CHAR16 charstr[2] = {u'\0', u'\0'}; // Initialize with null characters
 
   va_list args;
@@ -210,7 +210,7 @@ bool con_output_stringf(EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL *ConOut, CHAR16 *format,
         charstr[0] = format[i];
         con_output_string(ConOut, charstr);
         con_output_string(ConOut, u"\r\n");
-        result = false;
+        result = FALSE;
         goto end;
         break;
       }
@@ -224,11 +224,11 @@ bool con_output_stringf(EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL *ConOut, CHAR16 *format,
   }
 end:
   va_end(args);
-  result = true;
+  result = TRUE;
   return result;
 }
 
-EFI_STATUS con_reset_output(EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL *ConOut)
+EFI_STATUS con_reset_output(EFI_SIMPLE_TEXT_OUT_PROTOCOL *ConOut)
 {
   if (ConOut == NULL)
   {
@@ -237,7 +237,7 @@ EFI_STATUS con_reset_output(EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL *ConOut)
   return ConOut->Reset(ConOut, FALSE);
 }
 
-EFI_STATUS con_clear_screen(EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL *ConOut)
+EFI_STATUS con_clear_screen(EFI_SIMPLE_TEXT_OUT_PROTOCOL *ConOut)
 {
   if (ConOut == NULL)
   {
@@ -246,7 +246,7 @@ EFI_STATUS con_clear_screen(EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL *ConOut)
   return ConOut->ClearScreen(ConOut);
 }
 
-EFI_STATUS con_set_color(EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL *ConOut, UINTN fg, UINTN bg)
+EFI_STATUS con_set_color(EFI_SIMPLE_TEXT_OUT_PROTOCOL *ConOut, UINTN fg, UINTN bg)
 {
   if (ConOut == NULL)
   {
@@ -255,7 +255,7 @@ EFI_STATUS con_set_color(EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL *ConOut, UINTN fg, UINT
   return ConOut->SetAttribute(ConOut, EFI_TEXT_ATTR(fg, bg));
 }
 
-EFI_STATUS con_output_string_colored_latter(EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL *ConOut, CHAR16 *prefix, CHAR16 *colored_message, UINTN fg, UINTN bg) {
+EFI_STATUS con_output_string_colored_latter(EFI_SIMPLE_TEXT_OUT_PROTOCOL *ConOut, CHAR16 *prefix, CHAR16 *colored_message, UINTN fg, UINTN bg) {
   if (ConOut == NULL || prefix == NULL || colored_message == NULL) {
     return EFI_INVALID_PARAMETER;
   }
@@ -269,7 +269,7 @@ EFI_STATUS con_output_string_colored_latter(EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL *Con
   return EFI_SUCCESS;
 }
 
-EFI_STATUS con_output_uint32_colored_latter(EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL *ConOut, CHAR16 *prefix, UINT32 *colored_number, UINTN fg, UINTN bg) {
+EFI_STATUS con_output_uint32_colored_latter(EFI_SIMPLE_TEXT_OUT_PROTOCOL *ConOut, CHAR16 *prefix, UINT32 *colored_number, UINTN fg, UINTN bg) {
   if (ConOut == NULL || prefix == NULL || colored_number == NULL) {
     return EFI_INVALID_PARAMETER;
   }
@@ -283,7 +283,7 @@ EFI_STATUS con_output_uint32_colored_latter(EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL *Con
   return EFI_SUCCESS;
 }
 
-EFI_STATUS con_output_efi_lba_colored_latter(EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL *ConOut, CHAR16 *prefix, EFI_LBA *colored_number, UINTN fg, UINTN bg) {
+EFI_STATUS con_output_efi_lba_colored_latter(EFI_SIMPLE_TEXT_OUT_PROTOCOL *ConOut, CHAR16 *prefix, EFI_LBA *colored_number, UINTN fg, UINTN bg) {
   if (ConOut == NULL || prefix == NULL || colored_number == NULL) {
     return EFI_INVALID_PARAMETER;
   }
@@ -297,7 +297,7 @@ EFI_STATUS con_output_efi_lba_colored_latter(EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL *Co
   return EFI_SUCCESS;
 }
 
-EFI_STATUS con_output_stringf_colored_latter(EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL *ConOut, UINTN fg, UINTN bg, CHAR16 *prefix, CHAR16 *format, ...)
+EFI_STATUS con_output_stringf_colored_latter(EFI_SIMPLE_TEXT_OUT_PROTOCOL *ConOut, UINTN fg, UINTN bg, CHAR16 *prefix, CHAR16 *format, ...)
 {
   if (ConOut == NULL || prefix == NULL || format == NULL)
   {
@@ -323,7 +323,7 @@ EFI_STATUS con_output_stringf_colored_latter(EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL *Co
 // =============================================
 
 // con_get_key adapted from Queso Feugo's "UEFI Dev (in C)" Episode 10.
-EFI_INPUT_KEY con_get_key(EFI_SIMPLE_TEXT_INPUT_PROTOCOL *ConIn, EFI_BOOT_SERVICES *BootServices)
+EFI_INPUT_KEY con_get_key(EFI_SIMPLE_TEXT_IN_PROTOCOL *ConIn, EFI_BOOT_SERVICES *BootServices)
 {
   EFI_EVENT events[1];
   EFI_INPUT_KEY key;
@@ -348,7 +348,7 @@ EFI_INPUT_KEY con_get_key(EFI_SIMPLE_TEXT_INPUT_PROTOCOL *ConIn, EFI_BOOT_SERVIC
 //  NULL, lmao.
 // =============================================
 
-// EFI_STATUS con_set_text_mode(EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL *ConOut)
+// EFI_STATUS con_set_text_mode(EFI_SIMPLE_TEXT_OUT_PROTOCOL *ConOut)
 // {
 //   ConDimensions dimensions = con_get_query_dimensions(ConOut);
 //   SIMPLE_TEXT_OUTPUT_MODE mode_info = con_get_mode_info(ConOut);
@@ -394,8 +394,7 @@ EFI_INPUT_KEY con_get_key(EFI_SIMPLE_TEXT_INPUT_PROTOCOL *ConIn, EFI_BOOT_SERVIC
 //     if (key.ScanCode == SCANCODE_ESC)
 //     {
 //       con_output_string(ConOut, u"\r\nshutting down\r\n");
-//       RuntimeServices->ResetSystem(EfiResetShutdown, EFI_SUCCESS, 0, NULL);
-//       __attribute__((noreturn));
+//       uefi_call_wrapper(RuntimeServices->ResetSystem(EfiResetShutdown, EFI_SUCCESS, 0, NULL));//       __attribute__((noreturn));
 //     }
 //   }
 
@@ -414,7 +413,7 @@ typedef struct
   UINTN rows;
 } ConDimensions;
 
-ConDimensions con_get_query_dimensions(EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL *ConOut)
+ConDimensions con_get_query_dimensions(EFI_SIMPLE_TEXT_OUT_PROTOCOL *ConOut)
 {
   ConDimensions dimensions = {0, 0};
 
@@ -423,7 +422,7 @@ ConDimensions con_get_query_dimensions(EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL *ConOut)
   return dimensions;
 }
 
-ConDimensions con_get_query_dimensions_with_mode(EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL *ConOut, INT32 Mode)
+ConDimensions con_get_query_dimensions_with_mode(EFI_SIMPLE_TEXT_OUT_PROTOCOL *ConOut, INT32 Mode)
 {
   ConDimensions dimensions = {0, 0};
 
@@ -432,13 +431,13 @@ ConDimensions con_get_query_dimensions_with_mode(EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL
   return dimensions;
 }
 
-VOID con_update_query_dimensions(EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL *ConOut, UINTN *cols, UINTN *rows)
+VOID con_update_query_dimensions(EFI_SIMPLE_TEXT_OUT_PROTOCOL *ConOut, UINTN *cols, UINTN *rows)
 {
 
   ConOut->QueryMode(ConOut, ConOut->Mode->Mode, &cols, &rows);
 }
 
-SIMPLE_TEXT_OUTPUT_MODE con_get_mode_info(EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL *ConOut)
+SIMPLE_TEXT_OUTPUT_MODE con_get_mode_info(EFI_SIMPLE_TEXT_OUT_PROTOCOL *ConOut)
 {
   SIMPLE_TEXT_OUTPUT_MODE info = {
       ConOut->Mode->MaxMode,
@@ -458,7 +457,7 @@ SIMPLE_TEXT_OUTPUT_MODE con_get_mode_info(EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL *ConOu
 
 EFI_STATUS system_shutdown(EFI_RUNTIME_SERVICES *RuntimeServices)
 {
-  RuntimeServices->ResetSystem(EfiResetShutdown, EFI_SUCCESS, 0, NULL);
+  uefi_call_wrapper(RuntimeServices->ResetSystem, 4, EfiResetShutdown, EFI_SUCCESS, 0, NULL);
   // __attribute__((noreturn));
 }
 

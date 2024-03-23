@@ -6,6 +6,18 @@
         "span": "c",
         "uefi-loadedimage.h": "c",
         "uefi-devicepath.h": "c",
-        "efi.h": "c"
+        "efi.h": "c",
+        "efipart.h": "c",
+        "efigpt.h": "c",
+        "efidef.h": "c",
+        "efiapi.h": "c",
+        "efifs.h": "c",
+        "efivar-guids.h": "c",
+        "efivar.h": "c",
+        "eficompiler.h": "c",
+        "efisetjmp.h": "c",
+        "efiprot.h": "c",
+        "efipoint.h": "c",
+        "efishell.h": "c"
     }
 }
