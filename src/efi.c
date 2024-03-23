@@ -1187,16 +1187,13 @@ view_bootable_media(void)
                          u"\r\n\r\n%s\r\nNameSize: %d\r\n"
                          u"VenderGuid TimeLow: %d\r\n"
                          u"Node: %d\r\n",
-                        //  u"\r\n\r\n",
+                         //  u"\r\n\r\n",
                          name,
                          name_size,
                          VendorGuid.TimeLow,
                          VendorGuid.Node);
       for (UINTN i = 0; i < sizeof(VendorGuid.Node); i++) {
-        con_output_stringf(ConOut,
-                           u"Node[%d]: %d\r\n",
-                           i,
-                           VendorGuid.Node[i]);
+        con_output_stringf(ConOut, u"Node[%d]: %d\r\n", i, VendorGuid.Node[i]);
       }
       con_output_string(ConOut, u"\r\n\r\n");
 
